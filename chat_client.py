@@ -2,6 +2,7 @@
 
 import sys
 import threading
+import re
 
 from kafka import KafkaProducer, KafkaConsumer
 
@@ -23,16 +24,17 @@ def read_messages(consumer):
 
 
 def cmd_msg(producer, channel, line):
-    # TODO À compléter
     pass
-
 
 
 def cmd_join(consumer, producer, line):
-    # TODO À compléter
-    pass
-
-
+    channel_ok = re.match(r'^#[a-zA-Z0-9_-]+$',line)
+    if not channel_ok:
+        print("ERROR: " + line + " as a channel name is not handled")
+        return False
+    else:
+        consumer.subscribe("chat_channel_" + line[1:])
+        return True
 
 def cmd_part(consumer, producer, line):
     # TODO À compléter
@@ -70,7 +72,8 @@ def main_loop(nick, consumer, producer):
         if cmd == "msg":
             cmd_msg(producer, curchan, args)
         elif cmd == "join":
-            cmd_join(consumer, producer, args)
+            if cmd_join(consumer, producer, args):
+                curchan = args
         elif cmd == "part":
             cmd_part(consumer, producer, args)
         elif cmd == "quit":
@@ -86,7 +89,7 @@ def main():
         return 1
 
     nick = sys.argv[1]
-    consumer = KafkaConsumer()
+    consumer = KafkaConsumer() ## par defaut il se met sur le localhost 9092
     producer = KafkaProducer()
     th = threading.Thread(target=read_messages, args=(consumer,))
     th.start()
