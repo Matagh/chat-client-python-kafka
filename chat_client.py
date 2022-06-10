@@ -47,18 +47,18 @@ def cmd_part(consumer, producer, line):
             print("You are not subscribe a channel anymore")
             return None
         else:
-            temp_topic = chan_to_topic()
-            consumer.subscribe(temp_topic)
+            temp_list_topic = []
+            for chan in LIST_CHAN_SUB:
+                temp_list_topic.append(chan_to_topic(chan))
+            consumer.subscribe(temp_list_topic)
             return LIST_CHAN_SUB[0]
     else:
         raise ValueError("ERROR: " + line + " is not part of your subscribed channel") 
 
 # cette méthode permet de transformer les noms d'une liste de channel en liste de nom standard pour le topic (de type 'chat_channel_[nomchannel]')
-def chan_to_topic():
-    temp_list_topic = []
-    for chan in LIST_CHAN_SUB:
-        temp_list_topic.append("chat_channel_" + chan[1:])
-    return temp_list_topic
+def chan_to_topic(chan):
+    temp_topic = "chat_channel_" + chan[1:]
+    return temp_topic
 
 def cmd_quit(producer, line):
     # TODO À compléter
