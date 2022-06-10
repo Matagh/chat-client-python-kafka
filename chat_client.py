@@ -23,8 +23,12 @@ def read_messages(consumer):
 
 
 
-def cmd_msg(producer, channel, line):
-    pass
+def cmd_msg(username, producer, channel, line):
+    if(channel == None):
+        raise ValueError("Can't send your message, you are not in a channel")
+    else:
+        print("chan value : " + channel)
+        producer.send(channel, bytes('<' + username + '> '+line, 'utf-8'))
 
 
 def cmd_join(consumer, producer, line):
@@ -70,7 +74,7 @@ def main_loop(nick, consumer, producer):
             args = line
 
         if cmd == "msg":
-            cmd_msg(producer, curchan, args)
+            cmd_msg(nick, producer, curchan, args)
         elif cmd == "join":
             if cmd_join(consumer, producer, args):
                 curchan = args
