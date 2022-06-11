@@ -85,7 +85,7 @@ def cmd_active(chan_to_active, active_chan_current):
     else:
         return chan_to_active
 
-# cette méthode permet de transformer les noms d'une liste de channel en liste de nom standard pour le topic (de type 'chat_channel_[nomchannel]')
+# cette méthode permet de transformer le nom d'un channel standard (#[nomchannel]) en nom de topic standard (de type 'chat_channel_[nomchannel]')
 def chan_to_topic(chan):
     return "chat_channel_" + chan[1:]
 
@@ -99,7 +99,7 @@ def cmd_quit(consumer, producer, username):
 def main_loop(username, consumer, producer):
     curchan = None
     LIST_CHAN_SUB=[]
-
+    
     while True:
         try:
             if curchan is None:
