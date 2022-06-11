@@ -20,7 +20,7 @@ def read_messages(consumer):
 
         for channel, messages in received.items():
             for msg in messages:
-                str_msg = str(msg.value, encoding='utf-8')
+                str_msg = '<' + str(msg.key, encoding='utf-8') + '> ' + str(msg.value, encoding ='utf-8')
                 print("< %s: %s" % (channel.topic, str_msg))
         
 
@@ -30,8 +30,8 @@ def cmd_msg(username, producer, channel, line):
     if(channel == None):
         print("ERROR: Can't send your message, you are not in a channel")
     else:
-        producer.send(chan_to_topic(channel), bytes('<' + username + '> '+line, 'utf-8'))
-        producer.send(MODERATION_TOPIC, bytes('<' + username + '> '+line, 'utf-8'))
+        producer.send(chan_to_topic(channel), bytes(line, 'utf-8'), bytes(username, 'utf-8'))
+        producer.send(MODERATION_TOPIC, bytes(line, 'utf-8'), bytes(username, 'utf-8'))
 
 
 def cmd_join(consumer, producer, chan_to_join, username):
