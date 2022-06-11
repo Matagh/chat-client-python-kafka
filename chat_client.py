@@ -15,16 +15,21 @@ def read_messages(consumer):
     while not should_quit:
         # On utilise poll pour ne pas bloquer indéfiniment quand should_quit
         # devient True
-        received = consumer.poll(100)
+        received = consumer.poll()
 
         for channel, messages in received.items():
             for msg in messages:
-                print("< %s: %s" % (channel.topic, msg.value))
+                str_msg = str(msg.value, encoding='utf-8')
+                print("< %s: %s" % (channel.topic, str_msg))
+        
 
 
 
-def cmd_msg(producer, channel, line):
-    pass
+def cmd_msg(username, producer, channel, line):
+    if(channel == None):
+        raise ValueError("Can't send your message, you are not in a channel")
+    else:
+        producer.send(chan_to_topic(channel), bytes('<' + username + '> '+line, 'utf-8'))
 
 
 def cmd_join(consumer, producer, line):
@@ -108,11 +113,12 @@ def main_loop(username, consumer, producer):
             args = line
 
         if cmd == "msg":
-            cmd_msg(producer, curchan, args)
+            cmd_msg(username, producer, curchan, args)
         elif cmd == "join":
             if cmd_join(consumer, producer, args):
                 curchan = args
                 LIST_CHAN_SUB.append(args)
+            print(consumer.topics())
         elif cmd == "part":
             temp = cmd_part(consumer, producer, args)
             if (temp or temp == None):
@@ -125,17 +131,17 @@ def main_loop(username, consumer, producer):
 
 def main():
     if len(sys.argv) != 2:
-        print("usage: %s nick" % sys.argv[0])
+        print("usage: %s username" % sys.argv[0])
         return 1
 
-    nick = sys.argv[1]
+    username = sys.argv[1]
     consumer = KafkaConsumer() ## par defaut il se met sur le localhost 9092
     producer = KafkaProducer()
     th = threading.Thread(target=read_messages, args=(consumer,))
     th.start()
 
     try:
-        main_loop(nick, consumer, producer)
+        main_loop(username, consumer, producer)
     finally:
         global should_quit
         should_quit = True
