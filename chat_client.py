@@ -15,7 +15,7 @@ def read_messages(consumer):
     while not should_quit:
         # On utilise poll pour ne pas bloquer indéfiniment quand should_quit
         # devient True
-        received = consumer.poll()
+        received = consumer.poll(10000)
 
         for channel, messages in received.items():
             for msg in messages:
@@ -27,66 +27,72 @@ def read_messages(consumer):
 
 def cmd_msg(username, producer, channel, line):
     if(channel == None):
-        raise ValueError("Can't send your message, you are not in a channel")
+        print("ERROR: Can't send your message, you are not in a channel")
     else:
         producer.send(chan_to_topic(channel), bytes('<' + username + '> '+line, 'utf-8'))
 
 
-def cmd_join(consumer, producer, line):
-    channel_ok = re.match(r'^#[a-zA-Z0-9_-]+$',line)
+def cmd_join(consumer, producer, chan_to_join, username):
+    channel_ok = re.match(r'^#[a-zA-Z0-9_-]+$',chan_to_join)
     if not channel_ok:
-        print("ERROR: " + line + " as a channel name is not handled")
+        print("ERROR: " + chan_to_join + " as a channel name is not handled")
         return False
     else:
-        LIST_CHAN_SUB.append(line)
+        LIST_CHAN_SUB.append(chan_to_join)
         new_list_topic = []
         for chan in LIST_CHAN_SUB:
             new_list_topic.append(chan_to_topic(chan))
         consumer.subscribe(new_list_topic)
+        producer.send(chan_to_topic(chan_to_join), bytes(username + ' has joined the channel', 'utf-8'))
         print(consumer.subscription())
         return True
 
-def cmd_part(consumer, producer, line):
-    channel_unsub_ok = re.match(r'^#[a-zA-Z0-9_-]+$',line)
+def cmd_part(consumer, producer, chan_quit, username, chan_active):
+    channel_unsub_ok = re.match(r'^#[a-zA-Z0-9_-]+$',chan_quit)
     if not channel_unsub_ok:
-        raise ValueError("ERROR: " + line + " as a channel name is not handled")
-    if line in LIST_CHAN_SUB:
-        LIST_CHAN_SUB.remove(line)
+        print("ERROR: " + chan_quit + " as a channel name is not handled")
+        return chan_active
+    if chan_quit in LIST_CHAN_SUB:
+        LIST_CHAN_SUB.remove(chan_quit)
         if len(LIST_CHAN_SUB) < 1:
             consumer.unsubscribe()
             print("You are not subscribe a channel anymore")
+            producer.send(chan_to_topic(chan_quit), bytes(username + ' has left the channel', 'utf-8'))
             return None
         else:
-            temp_list_topic = []
+            update_list_topic = []
             for chan in LIST_CHAN_SUB:
-                temp_list_topic.append(chan_to_topic(chan))
-            consumer.subscribe(temp_list_topic)
+                update_list_topic.append(chan_to_topic(chan))
+            consumer.subscribe(update_list_topic)
             print(consumer.subscription())
+            producer.send(chan_to_topic(chan_quit), bytes(username + ' has left the channel', 'utf-8'))
             return LIST_CHAN_SUB[0]
     else:
-        raise ValueError("ERROR: " + line + " is not part of your subscribed channel") 
+        print("ERROR: " + chan_quit + " is not part of your subscribed channel")
+        return chan_active
 
-def cmd_active(line, active_chan_current):
-    channel_unsub_ok = re.match(r'^#[a-zA-Z0-9_-]+$',line)
+def cmd_active(chan_to_active, active_chan_current):
+    channel_unsub_ok = re.match(r'^#[a-zA-Z0-9_-]+$',chan_to_active)
     if not channel_unsub_ok:
-        raise ValueError("ERROR: " + line + " as a channel name is not handled")
-    if not line in LIST_CHAN_SUB:
+        print("ERROR: " + chan_to_active + " as a channel name is not handled")
+        return active_chan_current
+    if not chan_to_active in LIST_CHAN_SUB:
         print("You are not yet subscribe to this channel, join (/join) the channel to make it your active channel")
         return active_chan_current
-    if line == active_chan_current:
-        print(line + ": this channel is already your active channel")
+    if chan_to_active == active_chan_current:
+        print(chan_to_active + ": this channel is already your active channel")
         return active_chan_current
     else:
-        return line
-    pass
+        return chan_to_active
 
 # cette méthode permet de transformer les noms d'une liste de channel en liste de nom standard pour le topic (de type 'chat_channel_[nomchannel]')
 def chan_to_topic(chan):
     return "chat_channel_" + chan[1:]
 
-def cmd_quit(producer, line):
-    # TODO À compléter
-    pass
+def cmd_quit(consumer, producer, username):
+    for chan in LIST_CHAN_SUB:
+        producer.send(chan_to_topic(chan), bytes(username + ' has quit the chat', 'utf-8'))
+    consumer.unsubscribe()
 
 
 
@@ -115,18 +121,15 @@ def main_loop(username, consumer, producer):
         if cmd == "msg":
             cmd_msg(username, producer, curchan, args)
         elif cmd == "join":
-            if cmd_join(consumer, producer, args):
+            if cmd_join(consumer, producer, args, username):
                 curchan = args
-                LIST_CHAN_SUB.append(args)
-            print(consumer.topics())
         elif cmd == "part":
-            temp = cmd_part(consumer, producer, args)
-            if (temp or temp == None):
-                curchan = temp
+            curchan = cmd_part(consumer, producer, args, username, curchan)
         elif cmd == "active":
             curchan = cmd_active(args,curchan)
         elif cmd == "quit":
-            cmd_quit(producer, args)
+            cmd_quit(consumer, producer, username)
+            LIST_CHAN_SUB = []
             break
 
 def main():
