@@ -1,4 +1,4 @@
-from pyspark import SparkSession
+from pyspark.sql import SparkSession
 
 spark = SparkSession \
           .builder \
@@ -13,10 +13,6 @@ df = spark\
       .option("startingOffsets", "earliest") \
       .load()
 
-ds = df
-  .writeStream
-  .format("kafka")
-  .option("kafka.bootstrap.servers", "localhost:9092", "chat_moderation")
-  .start()
+ds = df.writeStream.format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option("checkpointLocation", "chat_moderation").start()
 
 ds.awaitTermination()
