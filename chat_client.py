@@ -33,7 +33,12 @@ def cmd_join(consumer, producer, line):
         print("ERROR: " + line + " as a channel name is not handled")
         return False
     else:
-        consumer.subscribe("chat_channel_" + line[1:])
+        LIST_CHAN_SUB.append(line)
+        new_list_topic = []
+        for chan in LIST_CHAN_SUB:
+            new_list_topic.append(chan_to_topic(chan))
+        consumer.subscribe(new_list_topic)
+        print(consumer.subscription())
         return True
 
 def cmd_part(consumer, producer, line):
@@ -51,14 +56,14 @@ def cmd_part(consumer, producer, line):
             for chan in LIST_CHAN_SUB:
                 temp_list_topic.append(chan_to_topic(chan))
             consumer.subscribe(temp_list_topic)
+            print(consumer.subscription())
             return LIST_CHAN_SUB[0]
     else:
         raise ValueError("ERROR: " + line + " is not part of your subscribed channel") 
 
 # cette méthode permet de transformer les noms d'une liste de channel en liste de nom standard pour le topic (de type 'chat_channel_[nomchannel]')
 def chan_to_topic(chan):
-    temp_topic = "chat_channel_" + chan[1:]
-    return temp_topic
+    return "chat_channel_" + chan[1:]
 
 def cmd_quit(producer, line):
     # TODO À compléter
@@ -68,6 +73,7 @@ def cmd_quit(producer, line):
 
 def main_loop(username, consumer, producer):
     curchan = None
+    LIST_CHAN_SUB=[]
 
     while True:
         try:
