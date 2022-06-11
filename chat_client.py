@@ -61,6 +61,20 @@ def cmd_part(consumer, producer, line):
     else:
         raise ValueError("ERROR: " + line + " is not part of your subscribed channel") 
 
+def cmd_active(line, active_chan_current):
+    channel_unsub_ok = re.match(r'^#[a-zA-Z0-9_-]+$',line)
+    if not channel_unsub_ok:
+        raise ValueError("ERROR: " + line + " as a channel name is not handled")
+    if not line in LIST_CHAN_SUB:
+        print("You are not yet subscribe to this channel, join (/join) the channel to make it your active channel")
+        return active_chan_current
+    if line == active_chan_current:
+        print(line + ": this channel is already your active channel")
+        return active_chan_current
+    else:
+        return line
+    pass
+
 # cette méthode permet de transformer les noms d'une liste de channel en liste de nom standard pour le topic (de type 'chat_channel_[nomchannel]')
 def chan_to_topic(chan):
     return "chat_channel_" + chan[1:]
@@ -103,6 +117,8 @@ def main_loop(username, consumer, producer):
             temp = cmd_part(consumer, producer, args)
             if (temp or temp == None):
                 curchan = temp
+        elif cmd == "active":
+            curchan = cmd_active(args,curchan)
         elif cmd == "quit":
             cmd_quit(producer, args)
             break
