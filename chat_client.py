@@ -9,6 +9,7 @@ from kafka import KafkaProducer, KafkaConsumer
 
 should_quit = False
 LIST_CHAN_SUB = []
+MODERATION_TOPIC = "chat_moderation"
 
 def read_messages(consumer):
     # TODO À compléter
@@ -30,6 +31,7 @@ def cmd_msg(username, producer, channel, line):
         print("ERROR: Can't send your message, you are not in a channel")
     else:
         producer.send(chan_to_topic(channel), bytes('<' + username + '> '+line, 'utf-8'))
+        producer.send(MODERATION_TOPIC, bytes('<' + username + '> '+line, 'utf-8'))
 
 
 def cmd_join(consumer, producer, chan_to_join, username):
