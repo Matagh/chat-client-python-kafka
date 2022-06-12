@@ -131,3 +131,4 @@ dmypy.json
 #ignore dossier chat_modération
 chat_moderation/
 chat_moderation_response/
+tmp/
