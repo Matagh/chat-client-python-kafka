@@ -1,7 +1,7 @@
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import window
 from pyspark.sql.functions import col
+from pyspark.sql.functions import window
 
 
 spark = SparkSession \
@@ -16,13 +16,18 @@ message_received = spark\
       .option("subscribe", "chat_moderation") \
       .option('includeTimestamp', 'true')\
       .load()
-#verifie le nombre de message par user en 5 sec
-message_treatment = message_received.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
+      
 #Check DataFrame structure
 f= open("/Users/louise/Desktop/FORMATION/Alternance/spark/chat-client-python-kafka/test.txt", "a")
 f.write(str(message_received))
 f.close()
+
 #send back to a kafka topic in new dataFrame structured with username as value
-test_data = message_received.withColumn("value",col("key").cast("string"))
-ds = test_data.writeStream.format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option("topic", "chat_moderation_response").option("checkpointLocation", "/Users/louise/Desktop/FORMATION/Alternance/spark/chat-client-python-kafka/tmp").start()
+test_data = message_received.withColumn("value",col("key").cast("string")).withColumn("timestamp",col("timestamp"))
+print(type(message_received))
+print(type(test_data))
+#print(test_data.rdd)
+#test_window = test_data.rolling(10)
+test_window = test_data.groupby( window(col("timestamp"),"10 seconds"))
+ds = test_window.writeStream.format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option("topic", "chat_moderation_response").option("checkpointLocation", "/Users/louise/Desktop/FORMATION/Alternance/spark/chat-client-python-kafka/tmp").start()
 ds.awaitTermination()

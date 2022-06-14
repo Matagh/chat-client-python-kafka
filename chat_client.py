@@ -20,7 +20,7 @@ def read_messages(consumer):
 
         for channel, messages in received.items():
             for msg in messages:
-                str_msg = '<' + str(msg.key, encoding='utf-8') + '> ' + str(msg.value, encoding ='utf-8')
+                str_msg = str(msg.key, encoding='utf-8') + '> ' + str(msg.value, encoding ='utf-8')
                 print("< %s: %s" % (channel.topic, str_msg))
         
 
