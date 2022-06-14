@@ -39,6 +39,8 @@ def cmd_join(consumer, producer, chan_to_join, username):
     if not channel_ok:
         print("ERROR: " + chan_to_join + " as a channel name is not handled")
         return False
+    if chan_to_join in LIST_CHAN_SUB:
+        print("ERROR: you are already subscribed to "+ chan_to_join)
     else:
         LIST_CHAN_SUB.append(chan_to_join)
         new_list_topic = []
