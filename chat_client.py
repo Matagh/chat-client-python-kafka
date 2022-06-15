@@ -41,6 +41,7 @@ def cmd_join(consumer, producer, chan_to_join, username):
         return False
     if chan_to_join in LIST_CHAN_SUB:
         print("ERROR: you are already subscribed to "+ chan_to_join)
+        return False
     else:
         LIST_CHAN_SUB.append(chan_to_join)
         new_list_topic = []
@@ -70,7 +71,10 @@ def cmd_part(consumer, producer, chan_quit, username, chan_active):
             consumer.subscribe(update_list_topic)
             print(consumer.subscription())
             producer.send(chan_to_topic(chan_quit), bytes(username + ' has left the channel', 'utf-8'))
-            return LIST_CHAN_SUB[0]
+            if chan_quit == chan_active:
+                return LIST_CHAN_SUB[0]
+            else:
+                return chan_active
     else:
         print("ERROR: " + chan_quit + " is not part of your subscribed channel")
         return chan_active
