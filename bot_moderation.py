@@ -3,6 +3,10 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from pyspark.sql.functions import window
 
+# Path vers le dossier du projet
+# A modifier avec votre path pour pouvoir tester
+PROJECT_PATH = "/Users/louise/Desktop/FORMATION/Alternance/spark/chat-client-python-kafka"
+
 #Crée une session spark
 spark = SparkSession \
           .builder \
@@ -25,7 +29,7 @@ data_transformed = message_received.withColumn("value",col("key").cast("string")
 #on renvoie la data à kafka dans un topic dédié à la modération
 ds = data_transformed.writeStream.format("kafka").option("kafka.bootstrap.servers", "localhost:9092")\
                   .option("topic", "chat_moderation_response") \
-                  .option("checkpointLocation", "/Users/louise/Desktop/FORMATION/Alternance/spark/chat-client-python-kafka/tmp")\
+                  .option("checkpointLocation", PROJECT_PATH + "/tmp")\
                   .start()
 
 ds.awaitTermination()
