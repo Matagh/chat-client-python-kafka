@@ -48,7 +48,7 @@ def cmd_join(consumer, producer, chan_to_join, username):
         for chan in LIST_CHAN_SUB:
             new_list_topic.append(chan_to_topic(chan))
         consumer.subscribe(new_list_topic)
-        producer.send(chan_to_topic(chan_to_join), bytes(username + ' has joined the channel', 'utf-8'))
+        producer.send(chan_to_topic(chan_to_join), bytes(' has joined the channel', 'utf-8'), bytes(username, 'utf-8'))
         print(consumer.subscription())
         return True
 
@@ -62,7 +62,7 @@ def cmd_part(consumer, producer, chan_quit, username, chan_active):
         if len(LIST_CHAN_SUB) < 1:
             consumer.unsubscribe()
             print("You are not subscribe a channel anymore")
-            producer.send(chan_to_topic(chan_quit), bytes(username + ' has left the channel', 'utf-8'))
+            producer.send(chan_to_topic(chan_quit), bytes(' has left the channel', 'utf-8'), bytes(username, 'utf-8'))
             return None
         else:
             update_list_topic = []
@@ -70,7 +70,7 @@ def cmd_part(consumer, producer, chan_quit, username, chan_active):
                 update_list_topic.append(chan_to_topic(chan))
             consumer.subscribe(update_list_topic)
             print(consumer.subscription())
-            producer.send(chan_to_topic(chan_quit), bytes(username + ' has left the channel', 'utf-8'))
+            producer.send(chan_to_topic(chan_quit), bytes(' has left the channel', 'utf-8'), bytes(username, 'utf-8'))
             if chan_quit == chan_active:
                 return LIST_CHAN_SUB[0]
             else:
@@ -99,7 +99,7 @@ def chan_to_topic(chan):
 
 def cmd_quit(consumer, producer, username):
     for chan in LIST_CHAN_SUB:
-        producer.send(chan_to_topic(chan), bytes(username + ' has quit the chat', 'utf-8'))
+            producer.send(chan_to_topic(chan), bytes(' has quit the chat', 'utf-8'), bytes(username, 'utf-8'))
     consumer.unsubscribe()
 
 
